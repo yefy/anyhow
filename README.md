@@ -22,7 +22,7 @@ anyhow = "1.0"
 
 ## Details
 
-- Use `Result<T, anyhow::Error>`, or equivalently `anyhow::Result<T>`, as the
+- Use `Result<T, anyhow::Error>`, or equivalently `Result<T>`, as the
   return type of any fallible function.
 
   Within the function, use `?` to easily propagate any error that implements the
