@@ -13,7 +13,7 @@
 //!
 //! # Details
 //!
-//! - Use `Result<T, anyhow::Error>`, or equivalently `Result<T>`, as
+//! - Use `Result<T, anyhow::Error>`, or equivalently `anyhow::Result<T>`, as
 //!   the return type of any fallible function.
 //!
 //!   Within the function, use `?` to easily propagate any error that implements
@@ -660,5 +660,20 @@ pub mod private {
         ($($tt:tt)*) => {
             stringify!($($tt)*)
         };
+    }
+}
+
+pub trait AnyhowError<T> {
+    fn error(self, fline: &'static str) -> crate::Result<T>;
+    fn errors(self, fline: &'static str, desc: &str) -> crate::Result<T>;
+}
+
+impl<T, E: std::fmt::Debug> AnyhowError<T> for std::result::Result<T, E> {
+    fn error(self, fline: &'static str) -> crate::Result<T> {
+        self.map_err(|e| anyhowErr!("[err:{} {:?}]", fline, e))
+    }
+
+    fn errors(self, fline: &'static str, desc: &str) -> crate::Result<T> {
+        self.map_err(|e| anyhowErr!("[err:{} {} {:?}]", fline, desc, e))
     }
 }
