@@ -172,50 +172,22 @@ macro_rules! anyhow {
         // concise in the common case.
         //$crate::Error::msg($msg)
         //$crate::Error::msg($crate::private::format!("@@@{}:{} {}", file!(), line!(), $msg))
-        $crate::Error::msg($crate::private::format!("@@@{}:{} {}", file!(), line!(), $crate::private::format!($msg)))
+        $crate::Error::msg($crate::private::format!("[{}:{}, @@@err:{}]", file!(), line!(), $crate::private::format!($msg)))
     };
     ($err:expr $(,)?) => ({
         use $crate::private::kind::*;
         match $err {
             //error => (&error).anyhow_kind().new(error),
-            error => (&error).anyhow_kind().new($crate::private::format!("@@@{}:{} {}", file!(), line!(), error)),
+            error => (&error).anyhow_kind().new($crate::private::format!("[{}:{}, @@@err:{}]", file!(), line!(), error)),
         }
     });
     ($fmt:expr, $($arg:tt)*) => {
         //$crate::Error::msg($crate::private::format!($fmt, $($arg)*))
         //$crate::Error::msg($crate::private::format!($crate::private::concat!("@@@{}:{} ", $fmt), file!(), line!(), $($arg)*))
-        $crate::Error::msg($crate::private::format!("@@@{}:{} {}", file!(), line!(), $crate::private::format!($fmt, $($arg)*)))
+        $crate::Error::msg($crate::private::format!("[{}:{}, @@@err:{}]", file!(), line!(), $crate::private::format!($fmt, $($arg)*)))
     };
 }
 
-/// Construct an ad-hoc error from a string or existing non-`anyhow` error
-/// value.
-///
-/// This evaluates to an [`Error`][crate::Error]. It can take either just a
-/// string, or a format string with arguments. It also can take any custom type
-/// which implements `Debug` and `Display`.
-///
-/// If called with a single argument whose type implements `std::error::Error`
-/// (in addition to `Debug` and `Display`, which are always required), then that
-/// Error impl's `source` is preserved as the `source` of the resulting
-/// `anyhow::Error`.
-///
-/// # Example
-///
-/// ```
-/// # type V = ();
-/// #
-/// use anyhow::{anyhow, Result};
-///
-/// fn lookup(key: &str) -> Result<V> {
-///     if key.len() != 16 {
-///         return Err(anyhow!("key length must be 16 characters, got {:?}", key));
-///     }
-///
-///     // ...
-///     # Ok(())
-/// }
-/// ```
 #[macro_export]
 macro_rules! anyhowErr {
     ($msg:literal $(,)?) => {
@@ -235,8 +207,28 @@ macro_rules! anyhowErr {
 }
 
 #[macro_export]
-macro_rules! fline {
+macro_rules! anyhow_line {
     () => {
         concat!(file!(), ":", line!())
     };
+}
+
+#[macro_export]
+macro_rules! anyhow_error {
+    // .map_err(anyhow_error!("some static msg"))
+    ($msg:literal $(,)?) => {
+        |e| ::anyhow::anyhowErr!("[{}:{}, msg:({}), @@@err:{:?}]", file!(), line!(), $msg, e)
+    };
+
+    // .map_err(anyhow_error!("some format {}", value))
+    ($fmt:expr, $($arg:tt)+) => {
+        |e| ::anyhow::anyhowErr!("[{}:{}, msg:({}), @@@err:{:?}]", file!(), line!(), format!($fmt, $($arg)+), e)
+    };
+
+    // anyhow_error!(err)
+    ($err:expr $(,)?) => {
+        |e| {
+        let err = $err;
+        ::anyhow::anyhowErr!("[{}:{}, msg:({}), @@@err:{:?}]", file!(), line!(), err, e)
+    }};
 }
