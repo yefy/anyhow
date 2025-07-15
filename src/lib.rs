@@ -662,18 +662,3 @@ pub mod private {
         };
     }
 }
-
-pub trait AnyhowError<T> {
-    fn error(self, fline: &'static str) -> crate::Result<T>;
-    fn errors(self, fline: &'static str, desc: &str) -> crate::Result<T>;
-}
-
-impl<T, E: std::fmt::Debug> AnyhowError<T> for std::result::Result<T, E> {
-    fn error(self, fline: &'static str) -> crate::Result<T> {
-        self.map_err(|e| anyhowErr!("[{}, @@@err:{:?}]", fline, e))
-    }
-
-    fn errors(self, fline: &'static str, desc: &str) -> crate::Result<T> {
-        self.map_err(|e| anyhowErr!("[{}, msg:({}), @@@err:{:?}]", fline, desc, e))
-    }
-}

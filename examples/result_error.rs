@@ -1,45 +1,46 @@
 use anyhow::anyhow;
 use anyhow::anyhow_error;
-use anyhow::anyhow_line;
-use anyhow::AnyhowError;
 
 pub fn err1() -> anyhow::Result<()> {
-    Err(anyhow!("111"))
+    Err(anyhow!("1_1"))
 }
 
-pub fn err2() -> anyhow::Result<()> {
-    err1().error(anyhow_line!())?;
-    Ok(())
+pub fn err1_2() -> anyhow::Result<()> {
+    Err(anyhow!())
 }
 
-pub fn err3() -> anyhow::Result<()> {
-    err2().errors(anyhow_line!(), "222")?;
-    Ok(())
+pub fn err1_3() -> anyhow::Result<()> {
+    let err = anyhow!("1_3");
+    Err(anyhow!(err))
 }
 
-pub fn err3_2() -> anyhow::Result<()> {
-    err3().errors(anyhow_line!(), &format!("333:{}", "33333"))?;
-    Ok(())
+pub fn err1_4() -> anyhow::Result<()> {
+    Err(anyhow!("1_4:{}", "1_4"))
 }
 
 pub fn err4() -> anyhow::Result<()> {
-    err3_2().map_err(anyhow_error!("4444"))?;
+    err1_3().map_err(anyhow_error!("4_1"))?;
     Ok(())
 }
 
 pub fn err4_2() -> anyhow::Result<()> {
-    err4().map_err(anyhow_error!("5555:{}", "55555"))?;
+    err4().map_err(anyhow_error!("4_2:{}", "4_2"))?;
     Ok(())
 }
 
 pub fn err4_3() -> anyhow::Result<()> {
-    let err = anyhow::anyhow!("66666");
+    let err = anyhow!("4_3");
     err4_2().map_err(anyhow_error!(err))?;
     Ok(())
 }
 
+pub fn err4_4() -> anyhow::Result<()> {
+    err4_3().map_err(anyhow_error!())?;
+    Ok(())
+}
+
 fn main() {
-    let ret = err4_3();
+    let ret = err4_4();
     if let Err(e) = ret {
         println!("{:?}", e);
     }
