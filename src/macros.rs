@@ -172,23 +172,23 @@ macro_rules! anyhow {
         // concise in the common case.
         //$crate::Error::msg($msg)
         //$crate::Error::msg($crate::private::format!("@@@{}:{} {}", file!(), line!(), $msg))
-        $crate::Error::msg($crate::private::format!("[{}:{}, @@@err:[{}]]", file!(), line!(), $crate::private::format!($msg)))
+        $crate::Error::msg($crate::private::format!("[{}:{} emsg({})]", file!(), line!(), $crate::private::format!($msg)))
     };
     ($err:expr $(,)?) => ({
         use $crate::private::kind::*;
         match $err {
             //error => (&error).anyhow_kind().new(error),
-            error => $crate::Error::msg($crate::private::format!("[{}:{}, @@@err:[{:?}]]", file!(), line!(), error))
+            error => $crate::Error::msg($crate::private::format!("[{}:{} emsg({})]", file!(), line!(), error))
         }
     });
 
     ($fmt:expr, $($arg:tt)*) => {
         //$crate::Error::msg($crate::private::format!($fmt, $($arg)*))
         //$crate::Error::msg($crate::private::format!($crate::private::concat!("@@@{}:{} ", $fmt), file!(), line!(), $($arg)*))
-        $crate::Error::msg($crate::private::format!("[{}:{}, @@@err:[{}]]", file!(), line!(), $crate::private::format!($fmt, $($arg)*)))
+        $crate::Error::msg($crate::private::format!("[{}:{} emsg({})]", file!(), line!(), $crate::private::format!($fmt, $($arg)*)))
     };
     () => {
-        $crate::Error::msg($crate::private::format!("[{}:{}, @@@err:[]]", file!(), line!()))
+        $crate::Error::msg($crate::private::format!("[{}:{} emsg()]", file!(), line!()))
     };
 }
 
@@ -217,21 +217,46 @@ macro_rules! anyhow_basic {
 macro_rules! anyhow_error {
     // .map_err(anyhow_error!("some static msg"))
     ($msg:literal $(,)?) => {
-        |e| ::anyhow::anyhow_basic!("[{}:{}, emsg:({}), @@@err:{:?}]", file!(), line!(), $msg, e)
+        |e| ::anyhow::anyhow_basic!("[{}:{}, emsg({})]{}{:?}", file!(), line!(), $msg, anyhow::END_OF_LINE, e)
     };
 
     // .map_err(anyhow_error!("some format {}", value))
     ($fmt:expr, $($arg:tt)+) => {
-        |e| ::anyhow::anyhow_basic!("[{}:{}, emsg:({}), @@@err:{:?}]", file!(), line!(), format!($fmt, $($arg)+), e)
+        |e| ::anyhow::anyhow_basic!("[{}:{}, emsg({})]{}{:?}", file!(), line!(), format!($fmt, $($arg)+), anyhow::END_OF_LINE, e)
     };
 
     // anyhow_error!(err)
     ($err:expr $(,)?) => {
         |e| {
         let err = $err;
-        ::anyhow::anyhow_basic!("[{}:{}, emsg:({}), @@@err:{:?}]", file!(), line!(), err, e)
+        ::anyhow::anyhow_basic!("[{}:{}, emsg({})]{}{:?}", file!(), line!(), err, anyhow::END_OF_LINE,e)
     }};
+    // anyhow_error!()
     () => {
-        |e| ::anyhow::anyhow_basic!("[{}:{}, emsg:(), @@@err:{:?}]", file!(), line!(), e)
+        |e| ::anyhow::anyhow_basic!("[{}:{}, emsg()]{}{:?}", file!(), line!(), anyhow::END_OF_LINE, e)
+    };
+}
+
+#[macro_export]
+macro_rules! anyhow_context {
+    // .map_err(anyhow_context!("some static msg"))
+    ($msg:literal $(,)?) => {
+        |e| e.context(::anyhow::anyhow_basic!("[{}:{}, emsg({})]", file!(), line!(), $msg))
+    };
+
+    // .map_err(anyhow_context!("some format {}", value))
+    ($fmt:expr, $($arg:tt)+) => {
+        |e| e.context(::anyhow::anyhow_basic!("[{}:{}, emsg({})]", file!(), line!(), format!($fmt, $($arg)+)))
+    };
+
+    // anyhow_context!(err)
+    ($err:expr $(,)?) => {
+        |e| {
+        let err = $err;
+        e.context(::anyhow::anyhow_basic!("[{}:{}, emsg({})]", file!(), line!(), err))
+    }};
+    // anyhow_context!()
+    () => {
+        |e| e.context(::anyhow::anyhow_basic!("[{}:{}, emsg()]", file!(), line!()))
     };
 }

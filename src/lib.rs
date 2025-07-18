@@ -662,3 +662,7 @@ pub mod private {
         };
     }
 }
+
+
+/// END_OF_LINE
+pub const END_OF_LINE: &str = "<<EOL>>";
